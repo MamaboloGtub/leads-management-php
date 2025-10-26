@@ -20,13 +20,13 @@ class LeadValidationTest extends TestCase
     public function test_lead_name_cannot_exceed_255_characters(): void
     {
         $token = $this->getAuthenticatedUser();
-        
+
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
         ])->postJson('/api/leads', [
             'name' => str_repeat('a', 256),
             'email' => 'test@example.com',
-            'lead_status' => 'new'
+            'leadStatus' => 'new'
         ]);
 
         $response->assertStatus(422)
@@ -36,47 +36,47 @@ class LeadValidationTest extends TestCase
     public function test_lead_status_cannot_exceed_50_characters(): void
     {
         $token = $this->getAuthenticatedUser();
-        
+
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
         ])->postJson('/api/leads', [
             'name' => 'John Doe',
             'email' => 'test@example.com',
-            'lead_status' => str_repeat('a', 51)
+            'leadStatus' => str_repeat('a', 51)
         ]);
 
         $response->assertStatus(422)
-                ->assertJsonValidationErrors(['lead_status']);
+                ->assertJsonValidationErrors(['leadStatus']);
     }
 
     public function test_lead_source_cannot_exceed_100_characters(): void
     {
         $token = $this->getAuthenticatedUser();
-        
+
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
         ])->postJson('/api/leads', [
             'name' => 'John Doe',
             'email' => 'test@example.com',
-            'lead_status' => 'new',
-            'lead_source' => str_repeat('a', 101)
+            'leadStatus' => 'new',
+            'leadSource' => str_repeat('a', 101)
         ]);
 
         $response->assertStatus(422)
-                ->assertJsonValidationErrors(['lead_source']);
+                ->assertJsonValidationErrors(['leadSource']);
     }
 
     public function test_lead_source_can_be_null(): void
     {
         $token = $this->getAuthenticatedUser();
-        
+
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
         ])->postJson('/api/leads', [
             'name' => 'John Doe',
             'email' => 'test@example.com',
-            'lead_status' => 'new',
-            'lead_source' => null
+            'leadStatus' => 'new',
+            'leadSource' => null
         ]);
 
         $response->assertStatus(201);
@@ -85,7 +85,7 @@ class LeadValidationTest extends TestCase
     public function test_lead_update_validates_email_uniqueness_excluding_current_lead(): void
     {
         $token = $this->getAuthenticatedUser();
-        
+
         // Create two leads
         $lead1 = Lead::factory()->create(['email' => 'lead1@example.com']);
         $lead2 = Lead::factory()->create(['email' => 'lead2@example.com']);
@@ -104,7 +104,7 @@ class LeadValidationTest extends TestCase
     public function test_lead_update_allows_keeping_same_email(): void
     {
         $token = $this->getAuthenticatedUser();
-        
+
         $lead = Lead::factory()->create(['email' => 'original@example.com']);
 
         // Update lead keeping the same email (should pass)
@@ -128,7 +128,7 @@ class LeadValidationTest extends TestCase
     public function test_lead_update_with_partial_data(): void
     {
         $token = $this->getAuthenticatedUser();
-        
+
         $lead = Lead::factory()->create([
             'name' => 'Original Name',
             'email' => 'original@example.com',
@@ -144,7 +144,7 @@ class LeadValidationTest extends TestCase
         ]);
 
         $response->assertStatus(200);
-        
+
         $lead->refresh();
         $this->assertEquals('Updated Name', $lead->name);
         $this->assertEquals('original@example.com', $lead->email); // Should remain unchanged

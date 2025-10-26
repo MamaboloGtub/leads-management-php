@@ -88,15 +88,27 @@ class LeadController extends Controller
                 'leadSource' => 'sometimes|nullable|string|max:100',
                 'leadStatus' => 'sometimes|required|string|max:50',
             ]);
-            $lead->update([
-                'name' => $validated['name'] ?? $lead->name,
-                'email' => $validated['email'] ?? $lead->email,
-                'lead_source' => $validated['leadSource'] ?? $lead->lead_source,
-                'lead_status' => $validated['leadStatus'] ?? $lead->lead_status,
-            ]);
+
+            // Update with snake_case database column names
+            $updateData = [];
+            if (isset($validated['name'])) {
+                $updateData['name'] = $validated['name'];
+            }
+            if (isset($validated['email'])) {
+                $updateData['email'] = $validated['email'];
+            }
+            if (isset($validated['leadSource'])) {
+                $updateData['lead_source'] = $validated['leadSource'];
+            }
+            if (isset($validated['leadStatus'])) {
+                $updateData['lead_status'] = $validated['leadStatus'];
+            }
+
+            $lead->update($updateData);
+
             return response()->json([
                 'message' => 'Lead updated successfully',
-                'data' => $lead
+                'data' => $lead->fresh() // Refresh the model to get updated data
             ]);
         } catch (LeadNotFoundException $e) {
             return $e->render();

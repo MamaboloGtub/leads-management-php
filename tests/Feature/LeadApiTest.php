@@ -34,10 +34,10 @@ class LeadApiTest extends TestCase
                             'id',
                             'name',
                             'email',
-                            'lead_status',
-                            'lead_source',
-                            'created_at',
-                            'updated_at'
+                            'leadStatus',
+                            'leadSource',
+                            'createdAt',
+                            'updatedAt'
                         ]
                     ],
                     'current_page',
@@ -57,12 +57,12 @@ class LeadApiTest extends TestCase
     public function test_authenticated_user_can_create_lead(): void
     {
         $token = $this->getAuthenticatedUser();
-        
+
         $leadData = [
             'name' => 'John Doe',
             'email' => 'john@example.com',
-            'lead_status' => 'new',
-            'lead_source' => 'website'
+            'leadStatus' => 'new',
+            'leadSource' => 'website'
         ];
 
         $response = $this->withHeaders([
@@ -75,7 +75,13 @@ class LeadApiTest extends TestCase
                     'data' => $leadData
                 ]);
 
-        $this->assertDatabaseHas('leads', $leadData);
+        // Check database with snake_case column names
+        $this->assertDatabaseHas('leads', [
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'lead_status' => 'new',
+            'lead_source' => 'website'
+        ]);
     }
 
     public function test_lead_creation_requires_authentication(): void
@@ -83,7 +89,7 @@ class LeadApiTest extends TestCase
         $leadData = [
             'name' => 'John Doe',
             'email' => 'john@example.com',
-            'lead_status' => 'new'
+            'leadStatus' => 'new'
         ];
 
         $response = $this->postJson('/api/leads', $leadData);
@@ -100,7 +106,7 @@ class LeadApiTest extends TestCase
         ])->postJson('/api/leads', []);
 
         $response->assertStatus(422)
-                ->assertJsonValidationErrors(['name', 'email', 'lead_status']);
+                ->assertJsonValidationErrors(['name', 'email', 'leadStatus']);
     }
 
     public function test_lead_creation_validates_email_format(): void
@@ -112,7 +118,7 @@ class LeadApiTest extends TestCase
         ])->postJson('/api/leads', [
             'name' => 'John Doe',
             'email' => 'invalid-email',
-            'lead_status' => 'new'
+            'leadStatus' => 'new'
         ]);
 
         $response->assertStatus(422)
@@ -129,7 +135,7 @@ class LeadApiTest extends TestCase
         ])->postJson('/api/leads', [
             'name' => 'John Doe',
             'email' => 'existing@example.com',
-            'lead_status' => 'new'
+            'leadStatus' => 'new'
         ]);
 
         $response->assertStatus(422)
@@ -150,7 +156,7 @@ class LeadApiTest extends TestCase
                     'id' => $lead->id,
                     'name' => $lead->name,
                     'email' => $lead->email,
-                    'lead_status' => $lead->lead_status
+                    'leadStatus' => $lead->lead_status
                 ]);
     }
 
@@ -164,7 +170,7 @@ class LeadApiTest extends TestCase
 
         $updateData = [
             'name' => 'Updated Name',
-            'lead_status' => 'contacted'
+            'leadStatus' => 'contacted'
         ];
 
         $response = $this->withHeaders([
@@ -204,20 +210,20 @@ class LeadApiTest extends TestCase
     public function test_leads_can_be_filtered_by_date_range(): void
     {
         $token = $this->getAuthenticatedUser();
-        
+
         // Create leads with different dates
         Lead::factory()->create(['created_at' => now()->subDays(10)]);
         Lead::factory()->create(['created_at' => now()]);
 
         $fromDate = now()->subDays(1)->format('Y-m-d H:i:s');
         $toDate = now()->addDay()->format('Y-m-d H:i:s');
-        
+
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
         ])->getJson("/api/leads?from={$fromDate}&to={$toDate}");
 
         $response->assertStatus(200);
-        
+
         // Should only return leads from the date range (1 lead)
         $this->assertEquals(1, count($response->json('data')));
     }
