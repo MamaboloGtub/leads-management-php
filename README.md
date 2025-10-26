@@ -73,7 +73,7 @@ tests/
 
 #### Example: Create Lead
 ```bash
-curl -X POST http://localhost:8080/api/leads \
+curl -X POST http://localhost:8000/api/leads \
 	-H "Content-Type: application/json" \
 	-H "Authorization: Bearer YOUR_JWT_TOKEN" \
 	-d '{
@@ -86,7 +86,7 @@ curl -X POST http://localhost:8080/api/leads \
 
 #### Example: Get All Leads (with date filtering)
 ```bash
-curl -X GET "http://localhost:8080/api/leads?from=2025-10-01&to=2025-10-31" \
+curl -X GET "http://localhost:8000/api/leads?from=2025-10-01&to=2025-10-31" \
 	-H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -98,8 +98,22 @@ curl -X GET "http://localhost:8080/api/leads?from=2025-10-01&to=2025-10-31" \
 	- `email` (string, required, unique)
 	- `leadSource` (string, optional)
 	- `leadStatus` (string, required)
-	- `created_at`, `updated_at` (timestamps)
+	- `createdAt`, `updatedAt` (timestamps in ISO format)
 - **Validation:** All endpoints validate input and return errors for invalid data.
+- **Format:** API uses camelCase for field names (e.g., `leadSource`, `leadStatus`, `createdAt`)
+
+#### Example Lead Response:
+```json
+{
+    "id": 1,
+    "name": "Wits University",
+    "email": "wits@lead.ac.za",
+    "leadSource": "Social Media",
+    "leadStatus": "Qualified",
+    "createdAt": "2025-10-27T00:03:10.222884",
+    "updatedAt": "2025-10-27T00:09:46.998213"
+}
+```
 
 ---
 
@@ -108,6 +122,35 @@ curl -X GET "http://localhost:8080/api/leads?from=2025-10-01&to=2025-10-31" \
 - Login returns a JWT token
 - All protected endpoints require `Authorization: Bearer <token>` header
 - User model implements JWTSubject
+
+### Default Login Credentials
+For testing purposes, you can use these default credentials (created by the database seeder):
+
+```json
+{
+    "email": "test@example.com",
+    "password": "password"
+}
+```
+
+#### Example Login Request:
+```bash
+curl -X POST http://localhost:8000/api/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{
+        "email": "test@example.com",
+        "password": "password"
+    }'
+```
+
+#### Example Response:
+```json
+{
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "token_type": "bearer",
+    "expires_in": 3600
+}
+```
 
 ---
 
@@ -167,7 +210,28 @@ php artisan migrate --seed
 
 ### 4. Start Server
 ```bash
-php -S localhost:8080 -t public
+php artisan serve
+# Or alternatively:
+php -S localhost:8000 -t public
+```
+
+The API will be available at `http://localhost:8000` (or the port specified by `php artisan serve`).
+
+### 5. Test the API
+Once the server is running, you can test the authentication:
+
+```bash
+# Login to get JWT token
+curl -X POST http://localhost:8000/api/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{
+        "email": "test@example.com",
+        "password": "password"
+    }'
+
+# Use the returned token for protected endpoints
+curl -X GET http://localhost:8000/api/leads \
+    -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
 ```
 
 ---
